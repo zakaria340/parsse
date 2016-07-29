@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {{ form_start(form) }}
+        <div class="ui stacked segment">
+            <div class="field">
+                <div class="ui left icon input">
+                    {{ form_row(form) }}
+                </div>
+            </div>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

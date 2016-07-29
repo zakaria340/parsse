@@ -1,0 +1,22 @@
+{
+  "name": "parsepdf",
+  "authors": [
+    "Zakaria Elhariri <zakaria-elhariri@smile-maroc.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "web/assets/vendor/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "semantic": "semantic-ui#^2.2.2"
+  }
+}
