@@ -2,31 +2,14 @@
 
 {% block body %}
 
-    {% if users is not empty %}
-        <table class="ui striped table">
-            <thead>
-            <tr>
-                <th>Matricule</th>
-                <th>Nom</th>
-                <th>Prénom</th>
-                <th>Email</th>
-                <th>Fichier</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for user in users %}
-                <tr>
-                    <td>{{ user.code }}</td>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.firstname }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>
-                        <a target="_blank"
-                           href="{{ path('viewDocument', {'code': user.code}) }}">Document</a>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+    {{ form_start(form) }}
+    <div class="ui stacked segment">
+        <div class="field">
+            <div class="ui left icon input">
+                {{ form_row(form) }}
+            </div>
+        </div>
+    </div>
+    {{ form_end(form) }}
+
 {% endblock %}

@@ -7,8 +7,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Smalot\PdfParser\Parser;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
-use AppBundle\Entity\Document;
-use AppBundle\Form\DocumentType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -20,33 +20,61 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        $path = $this->getParameter('pdf_directory');
-        $pathFiles = $this->getParameter('pdf_directory_files');
-        $file = new Filesystem();
-        try {
-            $file->mkdir($path);
-            $file->mkdir($pathFiles);
-        } catch (IOExceptionInterface $e) {
-            echo "An error occurred while creating your directory at ".$e->getPath();
-        }
+        $form = $this->createFormBuilder()
+            ->add(
+                'subject',
+                TextType::class,
+                ['label' => 'Subject']
+            )
+            ->add(
+                'body',
+                TextareaType::class,
+                array(
+                    'attr' => array('class' => 'tinymce'),
+                )
+            )->add(
+                'save',
+                SubmitType::class,
+                ['label' => 'Send']
+            )
+            ->getForm();
 
-        $listUsers = array();
-        $path = $this->getParameter('pdf_directory');
-        $userPath = $path.'/users.json';
-        if ($file->exists($userPath)) {
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $path = $this->getParameter('pdf_directory');
+            $userPath = $path.'/users.json';
+            $data = $form->getData();
             $userFile = file_get_contents($userPath);
-            $listUsers = json_decode($userFile);
+            $listUsers = json_decode($userFile, true);
+            foreach ($listUsers as $user) {
+                $pathFiles = $this->getParameter('pdf_directory_files');
+                $pathNewDocument = $pathFiles.'/'.$user['code'].'.pdf';
+                $file = new Filesystem();
+                if ($file->exists($pathNewDocument)) {
+                    $message = \Swift_Message::newInstance()
+                        ->setSubject($data['subject'])
+                        ->setFrom('usher340@gmail.com')
+                        ->setTo($user['email'])
+                        ->setBody(
+                            $this->renderView(
+                            // app/Resources/views/Emails/mail.html.twig
+                                'emails/mail.html.twig',
+                                array('body' => $data['body'])
+                            ),
+                            'text/html'
+                        )
+                        ->attach(\Swift_Attachment::fromPath($pathNewDocument));
+                    $this->get('mailer')->send($message);
+                }
+            }
         }
 
-        // replace this example code with whatever you need
         return $this->render(
-          'default/index.html.twig',
-          [
-            'base_dir' => realpath(
-              $this->getParameter('kernel.root_dir').'/..'
-            ),
-            'users' => $listUsers,
-          ]
+            'default/index.html.twig',
+            [
+                'form' => $form->createView(),
+            ]
         );
     }
 
@@ -69,18 +97,26 @@ class DefaultController extends Controller
      */
     public function documentsAction(Request $request)
     {
+        $file = new Filesystem();
+        $listUsers = array();
+        $path = $this->getParameter('pdf_directory');
+        $userPath = $path.'/users.json';
+        if ($file->exists($userPath)) {
+            $userFile = file_get_contents($userPath);
+            $listUsers = json_decode($userFile);
+        }
         $form = $this->createFormBuilder()
-          ->add(
-            'submitFile',
-            FileType::class,
-            ['label' => 'Document to Send']
-          )
-          ->add(
-            'save',
-            SubmitType::class,
-            ['label' => 'Valider']
-          )
-          ->getForm();
+            ->add(
+                'submitFile',
+                FileType::class,
+                ['label' => 'Document to Send']
+            )
+            ->add(
+                'save',
+                SubmitType::class,
+                ['label' => 'Valider']
+            )
+            ->getForm();
 
         $form->handleRequest($request);
 
@@ -89,8 +125,8 @@ class DefaultController extends Controller
             $fileName = 'documents.pdf';
             // Generate a unique name for the file before saving it
             $file->move(
-              $this->getParameter('pdf_directory'),
-              $fileName
+                $this->getParameter('pdf_directory'),
+                $fileName
             );
 
             $path = $this->getParameter('pdf_directory');
@@ -104,15 +140,15 @@ class DefaultController extends Controller
                 $string = preg_replace('/\s+/', '', $string);
                 preg_match('/Retraite(.*?)Solde/', $string, $display);
                 if (preg_match(
-                    '/Retraite(.*?)Solde/',
-                    $string,
-                    $display
-                  ) === 1
+                        '/Retraite(.*?)Solde/',
+                        $string,
+                        $display
+                    ) === 1
                 ) {
                     $matricule = $display[1];
                     $pathNewDocument = $pathFiles.'/'.$matricule.'.pdf';
                     exec(
-                      "pdftk $pathDocument cat $key output $pathNewDocument"
+                        "pdftk $pathDocument cat $key output $pathNewDocument"
                     );
                 }
             }
@@ -120,10 +156,15 @@ class DefaultController extends Controller
         }
 
         return $this->render(
-          'default/documents.html.twig',
-          [
-            'form' => $form->createView(),
-          ]
+            'default/documents.html.twig',
+            [
+                'form' => $form->createView(),
+
+                'base_dir' => realpath(
+                    $this->getParameter('kernel.root_dir').'/..'
+                ),
+                'users' => $listUsers,
+            ]
         );
     }
 
@@ -141,17 +182,17 @@ class DefaultController extends Controller
             $listUsers = json_decode($userFile);
         }
         $form = $this->createFormBuilder()
-          ->add(
-            'submitFile',
-            FileType::class,
-            ['label' => 'File to Submit']
-          )
-          ->add(
-            'save',
-            SubmitType::class,
-            ['label' => 'Valider']
-          )
-          ->getForm();
+            ->add(
+                'submitFile',
+                FileType::class,
+                ['label' => 'File to Submit']
+            )
+            ->add(
+                'save',
+                SubmitType::class,
+                ['label' => 'Valider']
+            )
+            ->getForm();
         $form->handleRequest($request);
         // Check if we are posting stuff
         if ($form->isSubmitted() && $form->isValid()) {
@@ -163,12 +204,12 @@ class DefaultController extends Controller
                 fgetcsv($handle);
                 while (($data = fgetcsv($handle, 1000, ";")) !== false) {
                     $user =
-                      [
-                        'code' => trim($data[0]),
-                        'name' => trim($data[1]),
-                        'firstname' => trim($data[2]),
-                        'email' => trim($data[3]),
-                      ];
+                        [
+                            'code' => utf8_encode(trim($data[0])),
+                            'name' => utf8_encode(trim($data[1])),
+                            'firstname' => utf8_encode(trim($data[2])),
+                            'email' => utf8_encode(trim($data[3])),
+                        ];
                     array_push($listUsers, $user);
                 }
                 fclose($handle);
@@ -179,11 +220,11 @@ class DefaultController extends Controller
         }
 
         return $this->render(
-          'default/users.html.twig',
-          [
-            'form' => $form->createView(),
-            'users' => $listUsers,
-          ]
+            'default/users.html.twig',
+            [
+                'form' => $form->createView(),
+                'users' => $listUsers,
+            ]
         );
     }
 }
