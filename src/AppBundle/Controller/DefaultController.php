@@ -20,6 +20,15 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $fs = new Filesystem();
+        $path = $this->getParameter('pdf_directory');
+        $pathFiles = $this->getParameter('pdf_directory_files');
+        try {
+            $fs->mkdir($path);
+            $fs->mkdir($pathFiles);
+        } catch (IOExceptionInterface $e) {
+            echo "An error occurred while creating your directory at ".$e->getPath();
+        }
         $form = $this->createFormBuilder()
             ->add(
                 'subject',
