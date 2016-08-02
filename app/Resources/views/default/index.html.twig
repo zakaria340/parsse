@@ -2,14 +2,46 @@
 
 {% block body %}
 
-    {{ form_start(form) }}
-    <div class="ui stacked segment">
-        <div class="field">
-            <div class="ui left icon input">
-                {{ form_row(form) }}
+    {% if readyUsers and readyDocuments %}
+        {{ form_start(form) }}
+        <div class="ui form">
+            <div class="field">
+                <label>Subject</label>
+                {{ form_widget(form.subject) }}
+            </div>
+            <div class="field">
+                <label>Body</label>
+                {{ form_widget(form.body) }}
+            </div>
+
+            <div class="field">
+                {{ form_widget(form.save, { 'attr': {'class': 'ui icon button'} }) }}
             </div>
         </div>
-    </div>
-    {{ form_end(form) }}
+        {{ form_end(form) }}
+    {% else %}
+
+        <div class="ui error message">
+            <div class="header">
+                We are not ready to send documents ...
+            </div>
+            <ul class="list">
+                {% if readyUsers %}
+                    <li>Users ready</li>
+                {% else %}
+                    <li><a href="{{ path('users') }}">Upload Users</a></li>
+                {% endif %}
+
+                {% if readyDocuments %}
+                    <li>Documents ready</li>
+                {% else %}
+                    <li><a href="{{ path('documents') }}">Upload Documents</a>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </div>
+
+    {% endif %}
 
 {% endblock %}

@@ -3,7 +3,21 @@
 {% block body %}
     {% block content %}
         {{ form_start(form) }}
-        {{ form_widget(form) }}
+            <div class="ui  form">
+                <div class="two fields">
+                    <div class="field">
+                        <label for="form_submitFile" class="ui icon button">
+                            <i class="file icon"></i>
+                            Open File</label>
+                        <div style="display: none">
+                            {{ form_widget(form.submitFile) }}
+                        </div>
+                    </div>
+                    <div class="field">
+                        {{ form_widget(form.save, { 'attr': {'class': 'ui icon button'} }) }}
+                    </div>
+                </div>
+            </div>
         {{ form_end(form) }}
     {% endblock %}
     {% if users is not empty %}
