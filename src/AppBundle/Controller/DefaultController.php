@@ -49,35 +49,36 @@ class DefaultController extends Controller {
     $form->handleRequest($request);
     if ($form->isSubmitted() && $form->isValid()) {
       $data = $form->getData();
-      try {
-        foreach ($listUsers as $user) {
-          $pathFiles = $this->getParameter('pdf_directory_files');
-          $pathNewDocument = $pathFiles . '/' . $user['code'] . '.pdf';
-          if ($file->exists($pathNewDocument)) {
-            $message = \Swift_Message::newInstance()
-              ->setSubject($data['subject'])
-              ->setFrom('usher340@gmail.com')
-              ->setTo($user['email'])
-              ->setBody(
-                $this->renderView(
-                // app/Resources/views/Emails/mail.html.twig
-                  'emails/mail.html.twig',
-                  array('body' => $data['body'])
-                ),
-                'text/html'
-              )
-              ->attach(\Swift_Attachment::fromPath($pathNewDocument));
-            $this->get('mailer')->send($message);
-          }
+      $i = 0;
+      foreach ($listUsers as $user) {
+        $pathFiles = $this->getParameter('pdf_directory_files');
+        $pathNewDocument = $pathFiles . '/' . $user['code'] . '.pdf';
+        if ($file->exists($pathNewDocument)) {
+          $message = \Swift_Message::newInstance()
+            ->setSubject($data['subject'])
+            ->setFrom('usher340@gmail.com')
+            ->setTo($user['email'])
+            ->setBody(
+              $this->renderView(
+              // app/Resources/views/Emails/mail.html.twig
+                'emails/mail.html.twig',
+                array('body' => $data['body'])
+              ),
+              'text/html'
+            )
+            ->attach(\Swift_Attachment::fromPath($pathNewDocument));
+          $this->get('mailer')->send($message);
+          $i++;
         }
-
-        $file->remove($pathFiles);
-        $file->remove($pathDocument);
-
-      } catch (IOExceptionInterface $e) {
-        echo "An error occurred while creating your directory at " . $e->getPath(
-          );
       }
+
+      //$file->remove($pathFiles);
+      //$file->remove($pathDocument);
+      $this->addFlash(
+        'notice',
+        'Your email was sent successfully!' . ' ' . $i . ' emails'
+      );
+
     }
 
     $readyUsers = $readyDocuments = FALSE;
@@ -152,6 +153,10 @@ class DefaultController extends Controller {
           );
         }
       }
+      $this->addFlash(
+        'notice',
+        'Documents uploaded successfully!'
+      );
     }
 
     return $this->render(
@@ -203,7 +208,7 @@ class DefaultController extends Controller {
 
       $this->addFlash(
         'notice',
-        'Your users were saved!'
+        'Users uploaded successfully!'
       );
     }
 
@@ -227,7 +232,7 @@ class DefaultController extends Controller {
     $userPath = $path . '/users.json';
     if ($file->exists($userPath)) {
       $userFile = file_get_contents($userPath);
-      $listUsers = json_decode($userFile, true);
+      $listUsers = json_decode($userFile, TRUE);
       foreach ($listUsers as $key => $value) {
         $pathNewDocument = $pathFiles . '/' . $value['code'] . '.pdf';
         $file = new Filesystem();
