@@ -114,6 +114,38 @@ class DefaultController extends Controller {
   }
 
   /**
+   * @Route(
+   *     "/delete-files/{code}",
+   *     name="deletefiles",
+   * )
+   */
+  public function deletedocumentsAction($code) {
+    $file = new Filesystem();
+    $path = $this->getParameter('pdf_directory');
+    $pathFiles = $this->getParameter('pdf_directory_files');
+    if ($code == 'users') {
+      $userPath = $path . '/users.json';
+      $file->remove($userPath);
+      $this->addFlash(
+        'notice',
+        'Users deleted successfully!'
+      );
+      return $this->redirectToRoute('users');
+    }
+    if ($code == 'documents') {
+      $fileName = 'documents.pdf';
+      $pathDocument = $path . '/' . $fileName;
+      $file->remove($pathDocument);
+      $file->remove($pathFiles);
+      $this->addFlash(
+        'notice',
+        'Documents deleted successfully!'
+      );
+      return $this->redirectToRoute('documents');
+    }
+  }
+
+  /**
    * @Route("/documents", name="documents")
    */
   public function documentsAction(Request $request) {

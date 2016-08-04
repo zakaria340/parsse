@@ -47,5 +47,6 @@
             {% endfor %}
             </tbody>
         </table>
+        <a href="{{ path('deletefiles', {'code': 'documents'}) }}" class="negative ui button">Delete Documents</a>
     {% endif %}
 {% endblock %}

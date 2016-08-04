@@ -6,11 +6,11 @@
         {{ form_start(form) }}
         <div class="ui form">
             <div class="field">
-                <label>Subject</label>
+                <label>Subject*</label>
                 {{ form_widget(form.subject) }}
             </div>
             <div class="field">
-                <label>Body</label>
+                <label>Body*</label>
                 {{ form_widget(form.body) }}
             </div>
 
@@ -20,7 +20,6 @@
         </div>
         {{ form_end(form) }}
     {% else %}
-
         <div class="ui error message">
             <div class="header">
                 We are not ready to send documents ...
@@ -38,10 +37,7 @@
                     <li><a href="{{ path('documents') }}">Upload Documents</a>
                     </li>
                 {% endif %}
-
             </ul>
         </div>
-
     {% endif %}
-
 {% endblock %}
