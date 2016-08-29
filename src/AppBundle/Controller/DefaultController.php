@@ -169,7 +169,18 @@ class DefaultController extends Controller {
       $pdf = $parser->parseFile($pathDocument);
       $pages = $pdf->getPages();
       foreach ($pages as $key => $page) {
-        $string = $page->getText();
+        $pathNewDocument = $pathFiles . '/' . $key . '.pdf';
+        exec(
+          "pdftk $pathDocument cat $key output $pathNewDocument"
+        );
+      }
+      $files = scandir($pathFiles);
+      unset($files[0]);
+      unset($files[1]);
+      foreach($files as $file) {
+        $file = $pathFiles . '/' . $file;
+        $pdf = $parser->parseFile($file);
+        $string = $pdf->getText();
         $string = preg_replace('/\s+/', '', $string);
         preg_match('/Retraite(.*?)Solde/', $string, $display);
         if (preg_match(
@@ -179,10 +190,7 @@ class DefaultController extends Controller {
           ) === 1
         ) {
           $matricule = $display[1];
-          $pathNewDocument = $pathFiles . '/' . $matricule . '.pdf';
-          exec(
-            "pdftk $pathDocument cat $key output $pathNewDocument"
-          );
+          rename($file, $pathFiles. '/' . $matricule . '.pdf');
         }
       }
       $this->addFlash(
@@ -220,15 +228,17 @@ class DefaultController extends Controller {
       $listUsers = array();
       if (($handle = fopen($filename, "r")) !== FALSE) {
         fgetcsv($handle);
-        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-          $user =
-            [
-              'code' => utf8_encode(trim($data[0])),
-              'name' => utf8_encode(trim($data[1])),
-              'firstname' => utf8_encode(trim($data[2])),
-              'email' => utf8_encode(trim($data[3])),
-            ];
-          array_push($listUsers, $user);
+        while (($data = fgetcsv($handle, 1000)) !== FALSE) {
+          if (isset($data[1])) {
+            $user =
+              [
+                'code' => utf8_encode(trim($data[0])),
+                'name' => utf8_encode(trim($data[1])),
+                'firstname' => utf8_encode(trim($data[2])),
+                'email' => utf8_encode(trim($data[3])),
+              ];
+            array_push($listUsers, $user);
+          }
         }
         fclose($handle);
       }
@@ -237,11 +247,12 @@ class DefaultController extends Controller {
       $path = $this->getParameter('pdf_directory');
       $userPath = $path . '/users.json';
       $file->dumpFile($userPath, $json);
-
-      $this->addFlash(
-        'notice',
-        'Users uploaded successfully!'
-      );
+      if (!empty($listUsers)) {
+        $this->addFlash(
+          'notice',
+          'Users uploaded successfully!'
+        );
+      }
     }
 
     return $this->render(
