@@ -53,10 +53,11 @@ class DefaultController extends Controller {
       foreach ($listUsers as $user) {
         $pathFiles = $this->getParameter('pdf_directory_files');
         $pathNewDocument = $pathFiles . '/' . $user['code'] . '.pdf';
+        $emailFrom = $this->getParameter('mailer_user');
         if ($file->exists($pathNewDocument)) {
           $message = \Swift_Message::newInstance()
             ->setSubject($data['subject'])
-            ->setFrom('usher340@gmail.com')
+            ->setFrom($emailFrom)
             ->setTo($user['email'])
             ->setBody(
               $this->renderView(
